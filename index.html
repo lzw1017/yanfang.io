@@ -1,330 +1,180 @@
-<!doctype html>
-<!--声明当前文档为html文档-->
+<!DOCTYPE html>
 <html lang="en">
-	<!--语言为英语-->
-	<head>
-		<!--头部-->
-		<meta charset="UTF-8">
-		<!--字符编码：utf-8国际编码  gb2312中文编码-->
-		<meta name="Keywords" content="关键词">
-		<meta name="Description" content="描述">
-		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
-		<title>就你最美</title>
-		<style>
-			* {
-				margin: 0px;
-				padding: 0px;
+<head>
+	<meta charset="UTF-8">
+	<title>爱心</title>
+	<style>
+		*{margin:0; padding:0;}
+		body{ background-color: #1E1E1E; 		}
+	</style>
+</head>
+<body>
+	<canvas id="drawHeart"></canvas>
+
+	<script>
+		var hearts = [];
+		var canvas = document.getElementById('drawHeart');
+		var wW = window.innerWidth;
+		var wH = window.innerHeight;
+		// 创建画布
+		var ctx = canvas.getContext('2d');
+		// 创建图片对象
+		var heartImage = new Image();
+		heartImage.src = 'img/heart.svg';
+		var num = 100;
+
+		init();
+
+		window.addEventListener('resize', function(){
+			 wW = window.innerWidth;
+			 wH = window.innerHeight;
+		});
+		// 初始化画布大小
+		function init(){
+			canvas.width = wW;
+			canvas.height = wH;
+			for(var i = 0; i < num; i++){
+				hearts.push(new Heart(i%5));
+			}
+			requestAnimationFrame(render);
+		}
+
+		function getColor(){
+			var val = Math.random() * 10;
+			if(val > 0 && val <= 1){
+				return '#00f';
+			} else if(val > 1 && val <= 2){
+				return '#f00';
+			} else if(val > 2 && val <= 3){
+				return '#0f0';
+			} else if(val > 3 && val <= 4){
+				return '#368';
+			} else if(val > 4 && val <= 5){
+				return '#666';
+			} else if(val > 5 && val <= 6){
+				return '#333';
+			} else if(val > 6 && val <= 7){
+				return '#f50';
+			} else if(val > 7 && val <= 8){
+				return '#e96d5b';
+			} else if(val > 8 && val <= 9){
+				return '#5be9e9';
+			} else {
+				return '#d41d50';
+			}
+		}
+
+		function getText(){
+			var val = Math.random() * 10;
+			if(val > 1 && val <= 3){
+				return '爱你一辈子';
+			} else if(val > 3 && val <= 5){
+				return '爱你';
+			} else if(val > 5 && val <= 8){
+				return '喜欢你';
+			} else{
+				return 'I Love You';
+			}
+		}
+
+		function Heart(type){
+			this.type = type;
+			// 初始化生成范围
+			this.x = Math.random() * wW;
+			this.y = Math.random() * wH;
+
+			this.opacity = Math.random() * .5 + .5;
+
+			// 偏移量
+			this.vel = {
+				x: (Math.random() - .5) * 5,
+				y: (Math.random() - .5) * 5
 			}
 
-			body {
-				background: #000;
+			this.initialW = wW * .5;
+			this.initialH = wH * .5;
+			// 缩放比例
+			this.targetScale = Math.random() * .15 + .02; // 最小0.02
+			this.scale = Math.random() * this.targetScale;
+
+			// 文字位置
+			this.fx = Math.random() * wW;
+			this.fy = Math.random() * wH;
+			this.fs = Math.random() * 10;
+			this.text = getText();
+
+			this.fvel = {
+				x: (Math.random() - .5) * 5,
+				y: (Math.random() - .5) * 5,
+				f: (Math.random() - .5) * 2
+			}
+		}
+
+		Heart.prototype.draw = function(){
+			ctx.save();
+			ctx.globalAlpha = this.opacity;
+			ctx.drawImage(heartImage, this.x, this.y, this.width, this.height);
+			ctx.scale(this.scale + 1, this.scale + 1);
+  			if(!this.type){
+  				// 设置文字属性
+				ctx.fillStyle = getColor();
+	  			ctx.font = 'italic ' + this.fs + 'px sans-serif';
+	  			// 填充字符串
+	  			ctx.fillText(this.text, this.fx, this.fy);
+  			}
+			ctx.restore();
+		}
+		Heart.prototype.update = function(){
+			this.x += this.vel.x;
+			this.y += this.vel.y;
+
+			if(this.x - this.width > wW || this.x + this.width < 0){
+				// 重新初始化位置
+				this.scale = 0;
+				this.x = Math.random() * wW;
+				this.y = Math.random() * wH;
+			}
+			if(this.y - this.height > wH || this.y + this.height < 0){
+				// 重新初始化位置
+				this.scale = 0;
+				this.x = Math.random() * wW;
+				this.y = Math.random() * wH;
 			}
 
-			.heart3d {
-				position: absolute;
-				top: 0;
-				right: 0;
-				bottom: 0;
-				left: 0;
-				margin: auto;
-				width: 100px;
-				height: 160px;
-				transform-origin: center center center;
-				transform-style: preserve-3d;
-				animation: spin 15s infinite linear;
+			// 放大
+			this.scale += (this.targetScale - this.scale) * .1;
+			this.height = this.scale * this.initialH;
+			this.width = this.height * 1.4;
+
+			// -----文字-----
+			this.fx += this.fvel.x;
+			this.fy += this.fvel.y;
+			this.fs += this.fvel.f;
+
+			if(this.fs > 50){
+				this.fs = 2;
 			}
 
-			#display {
-				width: 200px;
-				color: white;
-				font-size: 24px;
-				white-space: normal;
-				text-indent: 55px;
-				position: absolute;
-				left: 100px;
-				top: 100px;
+			if(this.fx - this.fs > wW || this.fx + this.fs < 0){
+				// 重新初始化位置
+				this.fx = Math.random() * wW;
+				this.fy = Math.random() * wH;
 			}
+			if(this.fy - this.fs > wH || this.fy + this.fs < 0){
+				// 重新初始化位置
+				this.fx = Math.random() * wW;
+				this.fy = Math.random() * wH;
+			}
+		}
 
-			.heart3d [class^="rib"] {
-				position: absolute;
-				width: 100px;
-				height: 160px;
-				border: solid #f22613;
-				border-width: 1px 1px 0 0;
-				border-radius: 50% 50% 0 / 40% 50% 0;
+		function render(){
+			ctx.clearRect(0, 0, wW, wH);
+			for(var i = 0; i < hearts.length; i++){
+				hearts[i].draw();
+				hearts[i].update();
 			}
-
-			.heart3d [class$="1"] {
-				transform: rotateY(10deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="2"] {
-				transform: rotateY(20deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="3"] {
-				transform: rotateY(30deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="4"] {
-				transform: rotateY(40deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="5"] {
-				transform: rotateY(50deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="6"] {
-				transform: rotateY(60deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="7"] {
-				transform: rotateY(70deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="8"] {
-				transform: rotateY(80deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="9"] {
-				transform: rotateY(90deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="10"] {
-				transform: rotateY(100deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="11"] {
-				transform: rotateY(110deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="12"] {
-				transform: rotateY(120deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="13"] {
-				transform: rotateY(130deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="14"] {
-				transform: rotateY(140deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="15"] {
-				transform: rotateY(150deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="16"] {
-				transform: rotateY(160deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="17"] {
-				transform: rotateY(170deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="18"] {
-				transform: rotateY(180deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="19"] {
-				transform: rotateY(190deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="20"] {
-				transform: rotateY(200deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="21"] {
-				transform: rotateY(210deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="22"] {
-				transform: rotateY(220deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="23"] {
-				-webkit-transform: rotateY(230deg) rotateZ(45deg) translateX(30px);
-				transform: rotateY(230deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="24"] {
-				transform: rotateY(240deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="25"] {
-				transform: rotateY(250deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="26"] {
-				transform: rotateY(260deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="27"] {
-				transform: rotateY(270deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="28"] {
-				transform: rotateY(280deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="29"] {
-				transform: rotateY(290deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="30"] {
-				transform: rotateY(300deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="31"] {
-				transform: rotateY(310deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="32"] {
-				transform: rotateY(320deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="33"] {
-				transform: rotateY(330deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="34"] {
-				transform: rotateY(340deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="35"] {
-				transform: rotateY(350deg) rotateZ(45deg) translateX(30px);
-			}
-
-			.heart3d [class$="36"] {
-				transform: rotateY(360deg) rotateZ(45deg) translateX(30px);
-			}
-
-			@keyframes spin {
-				to {
-					transform: rotateY(360deg) rotateX(360deg);
-				}
-			}
-
-			.per {
-				width: 50px;
-				height: 50px;
-				position: absolute;
-				top: 0;
-				left: 0;
-				right: 0;
-				bottom: 0;
-				margin: auto;
-				transform-style: preserve-3d;
-				perspective: 800px;
-			}
-
-			.img {
-				width: 50px;
-				height: 50px;
-				position: absolute;
-				backface-visibility: hidden;
-			}
-
-			.img:nth-child(1) {
-				top: -50px;
-				left: 0;
-				transform-origin: bottom;
-				transform: translateZ(30px) rotateX(90deg);
-			}
-
-			.img:nth-child(2) {
-				top: 50px;
-				left: 0;
-				transform-origin: top;
-				transform: translateZ(30px) rotateX(-90deg);
-			}
-
-			.img:nth-child(3) {
-				top: 0px;
-				left: -50px;
-				transform-origin: right;
-				transform: translateZ(30px) rotateY(-90deg);
-			}
-
-			.img:nth-child(4) {
-				top: 0px;
-				left: 50px;
-				transform-origin: left;
-				transform: translateZ(30px) rotateY(90deg);
-			}
-
-			.img:nth-child(6) {
-				top: 0px;
-				left: 0;
-				transform: translateZ(30px);
-			}
-
-			.img:nth-child(5) {
-				top: 0px;
-				left: 0;
-				transform: translateZ(0px);
-			}
-		</style>
-	</head>
-	<body>
-		<!--身体-->
-		<div id="display">
-		</div>
-		<div class='heart3d'>
-			<div class='rib1'></div>
-			<div class='rib2'></div>
-			<div class='rib3'></div>
-			<div class='rib4'></div>
-			<div class='rib5'></div>
-			<div class='rib6'></div>
-			<div class='rib7'></div>
-			<div class='rib8'></div>
-			<div class='rib9'></div>
-			<div class='rib10'></div>
-			<div class='rib11'></div>
-			<div class='rib12'></div>
-			<div class='rib13'></div>
-			<div class='rib14'></div>
-			<div class='rib15'></div>
-			<div class='rib16'></div>
-			<div class='rib17'></div>
-			<div class='rib18'></div>
-			<div class='rib19'></div>
-			<div class='rib20'></div>
-			<div class='rib21'></div>
-			<div class='rib22'></div>
-			<div class='rib23'></div>
-			<div class='rib24'></div>
-			<div class='rib25'></div>
-			<div class='rib26'></div>
-			<div class='rib27'></div>
-			<div class='rib28'></div>
-			<div class='rib29'></div>
-			<div class='rib30'></div>
-			<div class='rib31'></div>
-			<div class='rib32'></div>
-			<div class='rib33'></div>
-			<div class='rib34'></div>
-			<div class='rib35'></div>
-			<div class='rib36'></div>
-			<div class="per">
-				<div class="img"><img width="50" height="50" src="艳芳/1.jpeg" /></div>
-				<div class="img"><img width="50" height="50" src="艳芳/2.jpeg" /></div>
-				<div class="img"><img width="50" height="50" src="艳芳/3.jpeg" /></div>
-				<div class="img"><img width="50" height="50" src="艳芳/4.jpeg" /></div>
-				<div class="img"><img width="50" height="50" src="艳芳/5.jpeg" /></div>
-				<div class="img"><img width="50" height="50" src="艳芳/1.jpeg" /></div>
-			</div>
-		</div>
-		<audio src="./艳芳/只要有你.mp3" preload id="play_a" controls="controls" width="30px" hidden=true loop=0></audio>
-		<script>
-			window.onload = function() {
-				let audioELe = document.querySelector('#play_a');
-				let heart3d = document.querySelector('.heart3d');
-				heart3d.addEventListener('click', function() {
-					audioELe.play();
-				});
-			};
-		</script>
-	</body>
+			requestAnimationFrame(render);
+		}
+	</script>
+</body>
 </html>
